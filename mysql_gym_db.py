@@ -19,24 +19,24 @@ user = "root"
 password = "Babinz2023!"
 host = "localhost"
 
-def add_member(cursor, id, name, age):
+def add_member(cursor, member_id, name, age):
     try:
-       new_member = (id, name, age)
-       query = "INSERT INTO Members(id, name, age) VALUES (%s, %s, %s)"
+       new_member = (member_id, name, age)
+       query = "INSERT INTO Members(member_id, name, age) VALUES (%s, %s, %s)"
        
        cursor.execute(query, new_member)
        
        
     except Error as e:
-         print(f"An exception occurred: {e}")
+         print(f"An exception occurred: \n {e}")
 
 
-def add_workout_session(cursor, member_id, date, duration_minutes, calories_burned):
+def add_workout_session(cursor, session_id, member_id, session_date, duration_minutes, calories_burned):
         # SQL query to add a new workout session
         # Error handling for invalid member ID or other constraints
     try:
-        new_session = (member_id, date, duration_minutes, calories_burned)
-        query = "INSERT INTO WorkoutSessions(member_id, date, duration_minutes, calories_burned) VALUES (%s, %s, %s, %s)"
+        new_session = (session_id, member_id, session_date, duration_minutes, calories_burned)
+        query = "INSERT INTO WorkoutSessions(session_id, member_id, session_date, duration_minutes, calories_burned) VALUES (%s, %s, %s, %s, %s)"
        
         cursor.execute(query, new_session)
 
@@ -45,7 +45,7 @@ def add_workout_session(cursor, member_id, date, duration_minutes, calories_burn
        
        
     except Exception as e:
-         print(f"An exception occurred: {e}")
+         print(f"An exception occurred:\n {e}")
 
 
 
@@ -54,16 +54,22 @@ def update_member_age(cursor, member_id, new_age):
         # Check if member exists
         # Error handling
         try:
+           
+
             update_member = (member_id, new_age)
-            query = "INSERT INTO Members(member_id, age) VALUES (%s, %s)"
-       
+           # update_member holds the values from input for the member_id and updated age
+
+            query = "UPDATE Members SET age = %s WHERE member_id = %s;"
+
+            # query to update Members table, set age to placeholder, with WHERE condition to match member_id
             cursor.execute(query, update_member)
-        
+             # execute query
+
         except mysql.connector.Error as db_err:
             print(f' Database Error: \n {db_err}')
        
         except Exception as e:
-            print(f"An exception occurred: {e}")
+            print(f"An exception occurred:\n {e}")
 
 
 
@@ -73,7 +79,7 @@ def delete_workout_session(cursor, session_id):
         # Error handling for non-existent session ID
     try:
         delete_session = (session_id)
-        query = "DELETE FROM WorkoutSessions(session_id) VALUES (%s)"
+        query = "DELETE FROM WorkoutSessions(session_id) VALUES (%s);"
        
         cursor.execute(query, delete_session)
     
@@ -83,6 +89,26 @@ def delete_workout_session(cursor, session_id):
        
     except Exception as e:
          print(f"An exception occurred: {e}")
+
+
+def get_members_in_age_range(cursor, start_age, end_age):
+        # SQL query using BETWEEN
+        # Execute and fetch results
+    try:
+        age_range = (start_age, end_age)
+        query = "SELECT * FROM Members WHERE age BETWEEN (%s) AND (%s);"
+       
+        cursor.execute(query, age_range)
+    
+    except mysql.connector.Error as db_err:
+        print(f' Database Error: \n {db_err}')
+       
+       
+    except Exception as e:
+         print(f"An exception occurred: {e}")
+
+
+
 
 
 
@@ -101,8 +127,9 @@ def main():
         print("2. Add a Workout Session. ")
         print("3. Update Member Age. ")
         print("4. Delete a Workout Session. ")
+        print("5. View Members within age range. ")
     
-        choice = input("Select an Option (1-4)")
+        choice = input("Select an Option (1-5)")
 
         
 
@@ -111,31 +138,31 @@ def main():
 
             if choice == "1":
 
-                id = input("Enter new member id #. ")
+                member_id = input("Enter new member id #. ")
                 name = input("Enter member name: ")
                 age = input("Enter member age: ")
 
-                add_member(cursor, id, name, age)
+                add_member(cursor, member_id, name, age)
             
                 conn.commit()
-            elif choice == "2":
 
+            elif choice == "2":
+                session_id = input("Enter Session Id: ")
                 member_id = input("Enter Member Id: ")
                 date = input("Enter a date for Workout: ")
                 duration_minutes = input("How long (minutes) is this Session? ")
                 calories_burned = input("How many calories will be burned? ")
                 
 
-                add_workout_session(member_id, date, duration_minutes, calories_burned)
+                add_workout_session(cursor, session_id, member_id, date, duration_minutes, calories_burned)
             
                 conn.commit()
 
             elif choice == "3":
-
                 member_id = input("Enter Member Id: ")
-                age = input(f"Enter update age for Member Id: {member_id} ")
                
-                update_member_age(member_id, age)
+                new_age = input(f"Enter update age for Member: \n")
+                update_member_age(cursor, member_id, new_age)
             
                 conn.commit()
 
@@ -144,7 +171,16 @@ def main():
                 session_id = input("Enter Session Id for Workout to delete: ")
                 
                
-                delete_workout_session(session_id)
+                delete_workout_session(cursor, session_id)
+            
+                conn.commit()
+            
+            elif choice == "5":
+                start_age = input("Enter start age: ")
+                end_age = input("Enter end age: ")
+               
+                
+                get_members_in_age_range(cursor, start_age, end_age)
             
                 conn.commit()
 
